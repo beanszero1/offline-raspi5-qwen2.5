@@ -73,7 +73,7 @@ def setup_logging():
 
 
 def _init_asr():
-    """初始化语音识别）"""
+    """初始化语音识别"""
     global model, rec, p, stream
     
     if model is not None:
@@ -208,3 +208,4 @@ atexit.register(restore_stderr)
 
 if not os.path.exists("logs"):
     os.makedirs("logs")
+
