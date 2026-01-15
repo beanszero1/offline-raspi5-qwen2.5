@@ -176,20 +176,7 @@ mkdir -p model
 unzip vosk-model-cn-0.22.zip -d ~/../your_proj/model/
 ```
 
-## 项目结构
 
-```
-.
-├── README.md                    # 项目说明文档
-├── LICENSE                      # Apache 2.0许可证
-├── requirements.txt             # Python依赖包列表
-├── config.py                    # 配置文件
-├── main.py                      # 主程序入口
-├── asr.py                       # 语音识别模块（Vosk）
-├── tts.py                       # 语音合成模块（pyttsx3）
-├── model_api.py                 # AI模型交互模块（Qwen2.5）
-└── keyboard_listener.py         # 键盘监听模块
-```
 
 ## 使用方法
 
@@ -250,6 +237,7 @@ SYSTEM_PROMPT = """你是一个智能语音助手小Q..."""
 - ASR模块：替换为其他语音识别引擎
 - TTS模块：替换为其他语音合成引擎
 - AI模块：替换为其他本地AI模型
+
 
 
 
