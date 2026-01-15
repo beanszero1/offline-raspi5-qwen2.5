@@ -229,7 +229,36 @@ SYSTEM_PROMPT = """你是一个智能语音助手小Q..."""
 1. 没有音源输出
 
    可以通过可以把.asoundrc文件放到/home/你的用户名/，用于绑定树莓派的音源输入和输出。
+```bash
 
+sudo nano ~/.asoundrc
+
+# 输入以下内容
+# 默认播放设备   这里用的端口号是2，设备的端口号可以用arecord -l 和 aplay -l查看
+pcm.!default {
+    type plug
+    slave {
+        pcm "hw:2,0"
+    }
+}
+
+# 默认录音设备
+pcm.!dsnoop {
+    type dsnoop
+    ipc_key 1024
+    slave {
+        pcm "hw:2,0"
+    }
+}
+
+# 默认控制设备
+ctl.!default {
+    type hw
+    card 2
+}
+
+
+```
 
 
 ### API扩展
@@ -237,6 +266,7 @@ SYSTEM_PROMPT = """你是一个智能语音助手小Q..."""
 - ASR模块：替换为其他语音识别引擎
 - TTS模块：替换为其他语音合成引擎
 - AI模块：替换为其他本地AI模型
+
 
 
 
