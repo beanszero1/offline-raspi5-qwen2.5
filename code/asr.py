@@ -19,7 +19,7 @@ p = None
 stream = None
 
 def _init_asr():
-    """初始化语音识别（延迟加载）"""
+    """初始化语音识别"""
     global model, rec, p, stream
     
     if model is not None:
@@ -101,3 +101,4 @@ def recognize_audio(data):
         return text
     
     return ""
+
