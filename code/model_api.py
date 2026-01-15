@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 AI模型API模块
-负责与本地AI模型（Ollama）进行交互
+通过Ollama与模型进行交互
 """
 
 import requests
-
 import config
 
 def ask_ai(text):
-    """与本地AI模型对话"""
+
     try:
         # 尝试请求本地 LLM
         response = requests.post(config.OLLAMA_URL, json={
