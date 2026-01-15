@@ -1,0 +1,12 @@
+# Python dependencies for Raspberry Pi Voice Assistant
+# Install with: pip install -r requirements.txt
+
+PyAudio==0.2.14
+pycparser==2.23
+pyttsx3==2.99
+requests==2.32.5
+srt==3.5.3
+tqdm==4.67.1
+urllib3==2.6.3
+vosk==0.3.45
+
