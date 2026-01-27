@@ -9,4 +9,7 @@ srt==3.5.3
 tqdm==4.67.1
 urllib3==2.6.3
 vosk==0.3.45
-
+wave>=0.0.2
+termios>=1.0.0
+tty>=1.0.0
+select>=0.0.1
