@@ -177,9 +177,10 @@ unzip vosk-model-cn-0.22.zip -d ~/../your_proj/model/
 
 
 
-### 5. 部署SenseVoice模型
+### 5. 部署SenseVoice模型(可选)
 
 ```
+# 注意,这里的SenseVoice模型不是部署在树莓派上而是在主机上,如果选择SenseVoice做ASR方案,可不下载Vosk模型
 # 克隆 SenseVoice 仓库
 git clone https://github.com/FunAudioLLM/sensevoice.git
 cd sensevoice
@@ -282,6 +283,7 @@ ctl.!default {
 - ASR模块：替换为其他语音识别引擎
 - TTS模块：替换为其他语音合成引擎
 - AI模块：替换为其他本地AI模型
+
 
 
 
