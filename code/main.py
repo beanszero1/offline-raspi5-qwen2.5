@@ -1,54 +1,71 @@
 # -*- coding: utf-8 -*-
-"""
-主程序模块
-语音助手的主循环和服务检查
-"""
-
 
 import os
 import time
-import requests
+import sys
 
 import config
 import keyboard_listener
 import asr
 import model_api
 import tts
+import check_utils
+import logging_utils
+
+# 设置日志记录
+logger = logging_utils.setup_module_logging("main")
 
 def check_services():
-
+    """检查所需服务是否可用"""
     print("检查系统服务...")
+    logger.info("检查系统服务...")
     
-    # 检查Vosk模型
-    if not os.path.exists(config.MODEL_PATH):
-        print(f"Vosk模型不存在，请下载中文模型到 '{config.MODEL_PATH}' 文件夹")
-        return False
-    
-    # 检查Ollama服务
-    try:
-        response = requests.get(config.OLLAMA_TAGS_URL, timeout=config.SERVICE_CHECK_TIMEOUT)
-        if response.status_code == 200:
-            print("Ollama服务正常")
-            models = response.json().get('models', [])
-            if models:
-                print(f"可用模型: {[m['name'] for m in models]}")
-            else:
-                print(f"没有找到模型，请先拉取模型: ollama pull {config.AI_MODEL}")
-        else:
-            print("Ollama服务异常")
-            return False
-    except:
-        print("无法连接Ollama服务，请启动: ollama serve")
+    # 使用check_utils检查所有服务
+    if not check_utils.check_all_services():
         return False
     
     return True
 
 
 
+def process_recorded_audio():
+    """处理已录音的音频缓冲区"""
+    if len(config.audio_buffer) == 0:
+        sys.stdout.write("\r录音缓冲区为空，跳过处理\n")
+        sys.stdout.flush()
+        return
+    
+    sys.stdout.write(f"\r处理录音数据，长度: {len(config.audio_buffer)} 字节\n")
+    sys.stdout.flush()
+    
+    # 调用ASR识别整个缓冲区
+    text = asr.recognize_buffer(config.audio_buffer)
+    
+    if text and len(text) > config.MIN_TEXT_LENGTH - 1:
+        sys.stdout.write(f"\r识别结果: {text}\n")
+        sys.stdout.flush()
+        
+        # 简单唤醒词检测
+        if any(keyword in text for keyword in config.WAKE_WORDS):
+            sys.stdout.write("\r检测到对话意图，正在思考...\n")
+            sys.stdout.flush()
+            reply = model_api.ask_ai(text)
+            tts.speak(reply)
+        else:
+            if len(text) > config.MIN_NON_WAKE_TEXT_LENGTH - 1:
+                reply = model_api.ask_ai(text)
+                tts.speak(reply)
+    else:
+        sys.stdout.write("\r未识别到有效语音\n")
+        sys.stdout.flush()
+    
+    # 清空缓冲区以备下次录音
+    config.audio_buffer.clear()
+
 def main():
     """主循环"""
-    print("\n语音助手就绪！请说话...")
-    print("提示：按下 Q 键可以退出程序")
+    print("\n语音助手就绪！")
+    print("提示：按下 空格键 开始/停止录音，按下 Q 键可以退出程序")
     
     # 设置键盘监听
     old_settings = keyboard_listener.setup_keyboard_listener()
@@ -59,32 +76,20 @@ def main():
             if keyboard_listener.check_key_press(old_settings):
                 break
                 
+            # 检查是否有待处理的录音
+            if config.processing_pending:
+                process_recorded_audio()
+                config.processing_pending = False
+                
             # 检查音频输入
             data = asr.get_audio_data()
             if len(data) == 0: 
                 continue
 
-            # Vosk 实时监听
-            text = asr.recognize_audio(data)
-            
-            if text and len(text) > config.MIN_TEXT_LENGTH - 1:  
-
-                print("\r", end="", flush=True)
-                print(f"听到: {text}")
-                
-                # 简单唤醒词检测
-                if any(keyword in text for keyword in config.WAKE_WORDS):
-                    print("检测到对话意图，正在思考...")
-                    reply = model_api.ask_ai(text)
-                    print("")  
-                    tts.speak(reply)
-                    print("")  
-                else:
-                    if len(text) > config.MIN_NON_WAKE_TEXT_LENGTH - 1: 
-                        reply = model_api.ask_ai(text)
-                        print("")  
-                        tts.speak(reply)
-                        print("")  
+            # 如果在录音状态，将音频数据累积到缓冲区
+            if config.recording_flag:
+                config.audio_buffer.extend(data)
+            # 不在录音状态时，不收集数据
 
             time.sleep(0.01)
 
