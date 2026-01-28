@@ -17,7 +17,7 @@
 
 ###   [2026/1/26]
 
-- **ASR升级**：从Vosk离线识别改为SenseVoice本地服务，支持多语言自动识别
+- **ASR升级**：从Vosk离线识别改为SenseVoice识别服务，支持多语言自动识别
 - **交互模式优化**：新增空格键录音控制，支持手动开始/停止录音
 - **错误处理完善**：统一日志系统，优化音频缓冲区处理流程
 
@@ -27,7 +27,7 @@
 
 ```
 ┌─────────────────┐     ┌─────────────────┐    ┌─────────────────┐
-│   麦克风输入     │───▶│   Vosk ASR      │───▶│    文本处理      │
+│   麦克风输入     │───▶│   SenseVoice    │───▶│    文本处理      │
 │  (实时音频流)    │     │  (语音转文字)    │    │  (唤醒词检测)    │
 └─────────────────┘     └─────────────────┘    └────────┬────────┘
                                                        │
@@ -50,13 +50,6 @@
 - Python 3.7+
 - RASPi OS 64bit
 - 中文语音包
-
-### Python包依赖
-所有Python依赖已列在 `requirements.txt` 文件中。推荐使用以下命令安装：
-
-```bash
-pip install -r requirements.txt
-```
 
 
 
@@ -163,32 +156,12 @@ sudo systemctl start ollama
 
 
 
-### 4. 下载Vosk中文模型
-
-```bash
-# 创建模型目录
-mkdir -p model
-
-# 下载中文模型（42M）
-# 从 https://alphacephei.com/vosk/models 手动下载，通过MobaXterm或者VNC放到树莓派中
-# 解压到 model/ 目录
-unzip vosk-model-cn-0.22.zip -d ~/../your_proj/model/
-```
-
-
-
-### 5. 部署SenseVoice模型(可选)
+### 5. 启动SenseVoice模型
 
 ```
-# 注意,这里的SenseVoice模型不是部署在树莓派上而是在主机上,如果选择SenseVoice做ASR方案,可不下载Vosk模型
-# 克隆 SenseVoice 仓库
-git clone https://github.com/FunAudioLLM/sensevoice.git
-cd sensevoice
+cd ~/your_proj/SenseVoice
 
-# 使用 pip 安装 Python 依赖
-pip install -r requirements.txt
-
-# 在本地主机上启动API服务为树莓派提供ASR服务
+# 启动API服务,第一次启动可能会自动下载SenseVoice模型的本体文件
 python api.py
 ```
 
@@ -276,10 +249,6 @@ ctl.!default {
 ```
 
 
-
-### 2.CPU占用率
-
-由于树莓派上面的GPU不是英伟达的，所以不支持ollama的CUDA加速，这样就会导致一个问题，跑模型的时候会完全占用CPU。我运行的时候看了一下占用率会跑到90%以上。所以SenseVoice模型需要部署到本地主机上，也是因为跑不动。并且模型用到qwen3的1.7B的话，容易超时，然后思考很久就无法输出了，无法达成这个实时性。作者预计在本机上再去部署一个RAG，然后更换1B以下的模型做意图识别，再去调用知识库的这种方案。
 
 
 
