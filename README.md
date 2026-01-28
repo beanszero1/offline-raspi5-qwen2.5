@@ -155,14 +155,6 @@ sudo systemctl start ollama
 
 
 
-### 5. 启动SenseVoice模型
-
-```bash
-cd ~/your_proj/SenseVoice
-
-# 启动API服务,第一次启动可能会自动下载SenseVoice模型的本体文件
-python api.py
-```
 
 
 
@@ -172,6 +164,11 @@ python api.py
 ```bash
 # 确保在虚拟环境中
 source ~/your_venv/bin/activate
+
+cd ~/your_proj/SenseVoice
+
+# 启动API服务,第一次启动可能会自动下载SenseVoice模型的本体文件
+python api.py
 
 # 运行主程序
 python main.py
@@ -257,6 +254,7 @@ ctl.!default {
 - ASR模块：替换为其他语音识别引擎
 - TTS模块：替换为其他语音合成引擎
 - AI模块：替换为其他本地AI模型
+
 
 
 
