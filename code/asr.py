@@ -81,7 +81,7 @@ def _init_asr():
     # 输出回车换行，确保光标在新行开始
     sys.stdout.write('\r\n')
     sys.stdout.flush()
-    tts.speak("初始化已完成，现在可以开始对话")
+    tts.speak("您好，有什么可以为您服务的吗")
 
 
 def cleanup_asr():
@@ -125,11 +125,15 @@ def get_audio_data():
 
 
 def reset_recognizer():
+    """重置识别器，开始新的录音会话（为兼容性保留）"""
     logger.info("识别器重置（SenseVoice API不需要重置）")
 
 
 def recognize_audio(data):
-
+    """
+    实时识别音频数据（为兼容性保留，但SenseVoice API不支持实时流式识别）
+    此函数将数据累积到缓冲区，实际识别由recognize_buffer完成
+    """
     # 这里不做实际识别，因为SenseVoice API需要整个音频文件
     # 原项目已改为使用录音缓冲区，所以这里返回空字符串
     return ""
@@ -139,6 +143,7 @@ def recognize_buffer(audio_buffer):
     """
     处理整个录音缓冲区的数据，返回识别文本
     将音频缓冲区保存为WAV文件，然后调用SenseVoice FastAPI进行识别
+    参考test_API_sucessfulVersion.py的调用格式
     """
     # 检查缓冲区长度
     if len(audio_buffer) == 0:
@@ -283,3 +288,5 @@ def recognize_buffer(audio_buffer):
     except Exception as e:
         logger.error(f"处理录音缓冲区时出错: {e}")
         return ""
+
+

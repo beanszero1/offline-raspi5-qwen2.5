@@ -28,7 +28,8 @@ def check_key_press(old_settings):
         
         # 检测q键
         if key == 'q' or key == 'Q':
-            print("\nQ键被按下，准备退出...")
+            sys.stdout.write('\r\nQ键被按下，准备退出...\r\n')
+            sys.stdout.flush()
             config.exit_flag = True
             return True
         

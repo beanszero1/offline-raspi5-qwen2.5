@@ -27,9 +27,18 @@ def check_services():
     return True
 
 
+def _tts_stream_callback(sentence):
+    """TTS流式回调函数，将句子添加到TTS队列"""
+    if sentence and sentence.strip():
+        tts.speak_stream(sentence.strip())
+
+
+# 现在使用百炼SDK内置的session_id机制实现多轮对话
+# 不再需要本地存储对话历史
+
 
 def process_recorded_audio():
-    """处理已录音的音频缓冲区"""
+    """处理已录音的音频缓冲区（支持流式输出）"""
     if len(config.audio_buffer) == 0:
         sys.stdout.write("\r录音缓冲区为空，跳过处理\n")
         sys.stdout.flush()
@@ -39,22 +48,31 @@ def process_recorded_audio():
     sys.stdout.flush()
     
     # 调用ASR识别整个缓冲区
-    text = asr.recognize_buffer(config.audio_buffer)
+    user_text = asr.recognize_buffer(config.audio_buffer)
     
-    if text and len(text) > config.MIN_TEXT_LENGTH - 1:
-        sys.stdout.write(f"\r识别结果: {text}\n")
+    if user_text and len(user_text) > config.MIN_TEXT_LENGTH - 1:
+        sys.stdout.write(f"\r识别结果: {user_text}\n")
         sys.stdout.flush()
         
         # 简单唤醒词检测
-        if any(keyword in text for keyword in config.WAKE_WORDS):
-            sys.stdout.write("\r检测到对话意图，正在思考...\n")
+        has_wake_word = any(keyword in user_text for keyword in config.WAKE_WORDS)
+        should_process = has_wake_word or len(user_text) > config.MIN_NON_WAKE_TEXT_LENGTH - 1
+        
+        if should_process:
+            sys.stdout.write("\r正在思考...\n")
             sys.stdout.flush()
-            reply = model_api.ask_ai(text)
-            tts.speak(reply)
-        else:
-            if len(text) > config.MIN_NON_WAKE_TEXT_LENGTH - 1:
-                reply = model_api.ask_ai(text)
-                tts.speak(reply)
+            
+            # 使用流式回调处理
+            # 使用百炼SDK内置的session_id机制，不再需要传入本地历史
+            # ask_ai现在：使用回调时返回None，不使用回调时返回文本
+            # 无论哪种情况，TTS线程都会输出文本，所以这里不需要再输出
+            reply = model_api.ask_ai(user_text, use_stream_callback=_tts_stream_callback, conversation_history=None)
+            
+            # 注意：现在不输出回复文本，因为TTS线程已经输出了
+            # 只有当ask_ai不使用回调时（理论上不会发生），才需要输出
+            if reply and reply.strip():
+
+                pass
     else:
         sys.stdout.write("\r未识别到有效语音\n")
         sys.stdout.flush()
