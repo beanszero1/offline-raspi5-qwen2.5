@@ -8,12 +8,20 @@
 本项目实现了一个在树莓派上运行的智能语音助手，具有以下特点：
 - **完全离线运行**：所有处理都在本地完成，无需网络连接
 - **中文语音交互**：支持中文语音识别和语音合成
-- **本地AI模型**：使用Qwen2.5:1.5b模型进行对话理解
+- **本地AI模型**：使用Qwen2.5:1.5b模型进行简单的任务分类
 - **轻量级设计**：针对树莓派等嵌入式设备性能选择轻量化方案
 
 
 
 ## 更新日志
+
+### [2026/2/5]
+
+- **接入百炼应用服务**：集成阿里百炼SDK，实现了多轮对话记忆功能
+- **智能任务分类**：新增问题分类系统，自动区分法律案例、通用问题和其他专业知识
+- **TTS流式输出**：重构语音合成模块，支持队列管理和伪流式语音输出
+
+
 
 ###   [2026/1/26]
 
@@ -22,20 +30,6 @@
 - **错误处理完善**：统一日志系统，优化音频缓冲区处理流程
 
 
-
-## 系统架构
-
-```
-┌─────────────────┐     ┌─────────────────┐    ┌─────────────────┐
-│   麦克风输入     │───▶│   SenseVoice    │───▶│    文本处理     │
-│  (实时音频流)    │     │  (语音转文字)   │    │  (唤醒词检测)    │
-└─────────────────┘     └─────────────────┘    └────────┬────────┘
-                                                       │
-┌─────────────────┐    ┌─────────────────┐    ┌───────▼────────┐
-│   音箱输出       │◀──│  pyttsx3 TTS    │◀── │   Qwen2.5      │
-│  (语音播放)      │    │                 │    │    思考 回答    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
 
 ## 硬件要求
 
@@ -54,7 +48,7 @@
 
 
 
-## 安装步骤
+## 环境配置步骤
 
 ### 1. 配置中文环境
 
@@ -155,6 +149,46 @@ sudo systemctl start ollama
 
 
 
+### 4. 阿里百炼平台和DASHSCOPE配置
+
+使用前需要设置以下环境变量：
+
+```bash
+# Linux/Mac
+export ALIBABA_CLOUD_ACCESS_KEY_ID='您的阿里云访问密钥ID'
+export ALIBABA_CLOUD_ACCESS_KEY_SECRET='您的阿里云访问密钥密码'
+export WORKSPACE_ID='您的阿里云百炼业务空间ID'
+
+# 注意这个DASHSCOPE与百炼实际上是阿里的两个平台
+# https://dashscope.console.aliyun.com/apiKey
+export DASHSCOPE_APP_ID="你的应用ID"
+export DASHSCOPE_API_KEY="你的API密钥"
+
+```
+
+其中WORKSPACE_ID可以在左下角的“业务空间详情“查看。
+
+
+
+ALIBABA_CLOUD_ACCESS_KEY_ID和SECRET需要在RAM控制台中配置。
+
+需要在左下角的“业务空间”上方的权限管理中，添加你的RAM角色。
+
+
+
+```
+#nano ~/.bashrc
+#添加到.bashrc文件的末尾,在百炼平台找到相应参数
+
+export ALIBABA_CLOUD_ACCESS_KEY_ID='xxxxxxxxxxxxxxx'
+export ALIBABA_CLOUD_ACCESS_KEY_SECRET='xxxxxxxxxxxxxxx'
+export WORKSPACE_ID='xxxxxxxx'
+
+#source ~/.bashrc
+```
+
+ 
+
 
 
 
@@ -165,12 +199,14 @@ sudo systemctl start ollama
 # 确保在虚拟环境中
 source ~/your_venv/bin/activate
 
-cd ~/your_proj/SenseVoice
+cd ~/.../raspi5-qwen2.5/SenseVoice
 
 # 启动API服务,第一次启动可能会自动下载SenseVoice模型的本体文件
 python api.py
 
+# 
 # 运行主程序
+cd ~/.../raspi5-qwen2.5/code
 python main.py
 ```
 
@@ -187,23 +223,14 @@ python main.py
 
 所有配置都在 `config.py` 文件中，可以修改以下参数：
 
-```python
-# AI模型配置
-AI_MODEL = "qwen2.5:1.5b"  # 可以改为其他Ollama支持且已部署在本地的模型
+```
+AI_MODEL = "qwen2.5:0.5b"     
 
-# 语音识别配置
-MODEL_PATH = "model"  
-SAMPLE_RATE = 16000   # 音频采样率
+BAILIAN_APP_ID = "a8877ad86xxxxxxf3486907efae88"
 
-# 语音合成配置
-TTS_RATE = 180       
-TTS_VOLUME = 0.8      
-
-# 唤醒词配置
-WAKE_WORDS = ["助手", "你好", "请问", "帮助"]
-
-# 系统提示词
-SYSTEM_PROMPT = """你是一个智能语音助手小Q..."""
+CLASSIFICATION_PROMPT = """
+请判断以下问题类型：
+"""
 ```
 
 
@@ -246,9 +273,7 @@ ctl.!default {
 
 
 
-
-
-### API扩展
+## API扩展
 
 项目采用模块化设计，可以轻松替换或扩展：
 - ASR模块：替换为其他语音识别引擎
